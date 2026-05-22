@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Frailty–Inflammation Phenotype Calculator</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+    font-family: Arial, sans-serif;
+    background:#f4f6f9;
+    margin:0;
+    padding:12px;
+    overflow:hidden;
+}
+.container{max-width:1500px;margin:auto;}
+.header{
+    background:linear-gradient(90deg,#1f4e79,#2c7fb8);
+    color:white;
+    padding:16px 24px;
+    border-radius:14px;
+    margin-bottom:14px;
+}
+.header h1{margin:0;font-size:30px;}
+.header p{font-size:15px;margin:5px 0 0 0;}
+.main{
+    display:grid;
+    grid-template-columns: 390px 1fr;
+    gap:14px;
+}
+.card{
+    background:white;
+    border-radius:14px;
+    padding:16px 20px;
+    box-shadow:0 3px 14px rgba(0,0,0,0.08);
+}
+h2{margin:0 0 10px 0;color:#1f4e79;font-size:24px;}
+h3{color:#1f4e79;margin:12px 0 7px 0;font-size:17px;}
+label{font-weight:bold;font-size:14px;}
+input, select{
+    width:100%;
+    padding:7px 9px;
+    margin-top:3px;
+    margin-bottom:8px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    font-size:14px;
+}
+.input-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:8px 12px;
+}
+.checkbox-row{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin:6px 0;
+    font-size:14px;
+}
+.checkbox-row input{width:auto;margin:0;}
+button{
+    width:100%;
+    background:#1f4e79;
+    color:white;
+    border:none;
+    padding:10px;
+    border-radius:10px;
+    font-size:17px;
+    cursor:pointer;
+    margin-top:10px;
+}
+button:hover{background:#163a5c;}
+.result-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:14px;
+}
+.result-title{
+    font-size:26px;
+    font-weight:bold;
+    color:#1f4e79;
+    margin-bottom:8px;
+}
+.score{
+    font-size:15px;
+    line-height:1.55;
+}
+.target{
+    color:#b30000;
+    font-weight:bold;
+    font-size:15px;
+    margin-top:10px;
+}
+.nontarget{
+    color:#2b7a2b;
+    font-weight:bold;
+    font-size:15px;
+    margin-top:10px;
+}
+.warning{
+    color:#b30000;
+    font-weight:bold;
+}
+.table{
+    border-collapse:collapse;
+    width:100%;
+    margin-top:8px;
+    font-size:13px;
+}
+.table th,.table td{
+    border:1px solid #ddd;
+    padding:5px 6px;
+    text-align:left;
+}
+.table th{background:#f0f4f8;}
+.plot-box{
+    border:1px solid #ddd;
+    border-radius:12px;
+    padding:8px;
+    background:#fafafa;
+}
+.small-note{
+    font-size:12px;
+    color:#666;
+    margin:0 0 5px 0;
+}
+.compact-title{
+    font-size:18px;
+    color:#1f4e79;
+    font-weight:bold;
+    margin:0 0 6px 0;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<div class="header">
+<h1>Frailty–Inflammation Phenotype Calculator</h1>
+<p>Dual-axis phenotype stratification based on raw laboratory data and Fried frailty components.</p>
+</div>
+
+<div class="main">
+
+<div class="card">
+<h2>Input Variables</h2>
+
+<h3>Basic information</h3>
+<div class="input-grid">
+<div>
+<label>Sex</label>
+<select id="sex">
+    <option value="male">Male</option>
+    <option value="female">Female</option>
+</select>
+</div>
+<div>
+<label>Height, cm</label>
+<input type="number" id="height" value="165" step="0.1">
+</div>
+<div>
+<label>Current weight, kg</label>
+<input type="number" id="weightNow" value="65" step="0.1">
+</div>
+<div>
+<label>Weight loss, kg/year</label>
+<input type="number" id="weightLossKg" value="0" step="0.1">
+</div>
+</div>
+
+<h3>Laboratory data <span class="small-note">(10⁹/L)</span></h3>
+<div class="input-grid">
+<div>
+<label>Neutrophils</label>
+<input type="number" id="neutrophil" value="4.0" step="0.01">
+</div>
+<div>
+<label>Lymphocytes</label>
+<input type="number" id="lymphocyte" value="1.5" step="0.01">
+</div>
+<div>
+<label>Platelets</label>
+<input type="number" id="platelet" value="220" step="1">
+</div>
+</div>
+
+<h3>Fried components</h3>
+<div class="input-grid">
+<div>
+<label>4.57-m walk, s</label>
+<input type="number" id="walkTime" value="5.5" step="0.1">
+</div>
+<div>
+<label>Left grip, kg</label>
+<input type="number" id="gripLeft" value="25" step="0.1">
+</div>
+<div>
+<label>Right grip, kg</label>
+<input type="number" id="gripRight" value="25" step="0.1">
+</div>
+<div>
+<label>Outdoor activity, min/day</label>
+<input type="number" id="activityMin" value="30" step="1">
+</div>
+</div>
+
+<div class="checkbox-row">
+    <input type="checkbox" id="fatigue">
+    <label for="fatigue">Fatigue or worsened walking difficulty in the past week</label>
+</div>
+
+<button onclick="calculatePhenotype()">Calculate Phenotype</button>
+</div>
+
+<div class="card">
+<div class="result-grid">
+
+<div>
+<div id="phenotype" class="result-title">Awaiting calculation</div>
+<div id="scores" class="score">Please input variables and click calculate.</div>
+<div id="recommendation"></div>
+<div id="friedTable"></div>
+</div>
+
+<div>
+<div class="compact-title">Two-axis position</div>
+<div class="plot-box">
+<svg id="plot" width="100%" height="430" viewBox="0 0 720 430"></svg>
+</div>
+</div>
+
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+const mean_logNLR = 0.6948781;
+const sd_logNLR = 0.4340205;
+const mean_logSII = 5.866755;
+const sd_logSII = 0.7265224;
+const loading_NLR = 0.7071068;
+const loading_SII = 0.7071068;
+const inflam_cutoff = -0.0635091;
+const frailty_cutoff = 1;
+
+function val(id){ return parseFloat(document.getElementById(id).value); }
+
+function calculatePhenotype(){
+
+    const sex = document.getElementById("sex").value;
+    const height = val("height");
+    const weightNow = val("weightNow");
+    const neut = val("neutrophil");
+    const lymph = val("lymphocyte");
+    const plt = val("platelet");
+    const weightLossKg = val("weightLossKg");
+    const walkTime = val("walkTime");
+    const gripLeft = val("gripLeft");
+    const gripRight = val("gripRight");
+    const activityMin = val("activityMin");
+    const fatigue = document.getElementById("fatigue").checked ? 1 : 0;
+
+    if(height <= 0 || weightNow <= 0 || lymph <= 0 || neut < 0 || plt < 0){
+        document.getElementById("phenotype").innerHTML = "Invalid input";
+        document.getElementById("scores").innerHTML = "<span class='warning'>Please check height, weight, and blood cell counts.</span>";
+        return;
+    }
+
+    const bmi = weightNow / Math.pow(height / 100, 2);
+    const nlr = neut / lymph;
+    const sii = plt * neut / lymph;
+
+    const logNLR = Math.log(nlr + 0.01);
+    const logSII = Math.log(sii + 0.01);
+    const zNLR = (logNLR - mean_logNLR) / sd_logNLR;
+    const zSII = (logSII - mean_logSII) / sd_logSII;
+    const inflammationScore = zNLR * loading_NLR + zSII * loading_SII;
+
+    const weightLossPositive =
+        (weightLossKg > 4.5) || (weightLossKg / weightNow > 0.05) ? 1 : 0;
+
+    let walkPositive = 0;
+    if(sex === "male"){
+        walkPositive = height <= 173 ? (walkTime >= 7 ? 1 : 0) : (walkTime >= 6 ? 1 : 0);
+    } else {
+        walkPositive = height <= 159 ? (walkTime >= 7 ? 1 : 0) : (walkTime >= 6 ? 1 : 0);
+    }
+
+    const gripBest = Math.max(gripLeft, gripRight);
+    let gripCutoff = 0;
+
+    if(sex === "male"){
+        if(bmi <= 24.0) gripCutoff = 29;
+        else if(bmi <= 26.0) gripCutoff = 30;
+        else if(bmi <= 28.0) gripCutoff = 30;
+        else gripCutoff = 32;
+    } else {
+        if(bmi <= 23.0) gripCutoff = 17;
+        else if(bmi <= 26.0) gripCutoff = 17.3;
+        else if(bmi <= 29.0) gripCutoff = 18;
+        else gripCutoff = 21;
+    }
+
+    const gripPositive = gripBest <= gripCutoff ? 1 : 0;
+
+    let activityPositive = 0;
+    if(sex === "male"){
+        activityPositive = activityMin < 21 ? 1 : 0;
+    } else {
+        activityPositive = activityMin < 17 ? 1 : 0;
+    }
+
+    const friedScore =
+        weightLossPositive + walkPositive + gripPositive + activityPositive + fatigue;
+
+    const frailtyState =
+        friedScore >= frailty_cutoff ? "High frailty" : "Low frailty";
+
+    const inflammationState =
+        inflammationScore >= inflam_cutoff ? "High inflammation" : "Low inflammation";
+
+    const phenotype = inflammationState + "–" + frailtyState;
+
+    document.getElementById("phenotype").innerHTML = phenotype;
+
+    document.getElementById("scores").innerHTML = `
+        <b>BMI:</b> ${bmi.toFixed(2)} kg/m²<br>
+        <b>NLR:</b> ${nlr.toFixed(3)} &nbsp;&nbsp; <b>SII:</b> ${sii.toFixed(1)}<br>
+        <b>Inflammatory burden score:</b> ${inflammationScore.toFixed(3)}<br>
+        <b>Fried score:</b> ${friedScore}<br>
+        <b>Frailty state:</b> ${frailtyState}<br>
+        <b>Inflammatory state:</b> ${inflammationState}
+    `;
+
+    if(phenotype === "High inflammation–High frailty"){
+        document.getElementById("recommendation").innerHTML =
+        `<div class="target">Target phenotype: candidate for inflammation-associated frailty intervention study.</div>`;
+    } else {
+        document.getElementById("recommendation").innerHTML =
+        `<div class="nontarget">Non-target phenotype for current intervention study.</div>`;
+    }
+
+    document.getElementById("friedTable").innerHTML = `
+        <table class="table">
+        <tr><th>Fried item</th><th>Result</th></tr>
+        <tr><td>Weight loss</td><td>${weightLossPositive ? "Positive" : "Negative"}</td></tr>
+        <tr><td>Walking time</td><td>${walkPositive ? "Positive" : "Negative"}</td></tr>
+        <tr><td>Grip strength</td><td>${gripPositive ? "Positive" : "Negative"} (${gripBest.toFixed(1)} kg; cutoff ${gripCutoff})</td></tr>
+        <tr><td>Physical activity</td><td>${activityPositive ? "Positive" : "Negative"}</td></tr>
+        <tr><td>Fatigue</td><td>${fatigue ? "Positive" : "Negative"}</td></tr>
+        </table>
+    `;
+
+    drawPlot(friedScore, inflammationScore);
+}
+
+function drawPlot(friedScore, inflammationScore){
+
+    const svg = document.getElementById("plot");
+    svg.innerHTML = "";
+
+    const W = 720, H = 430;
+    const margin = {left:70,right:30,top:25,bottom:55};
+    const innerW = W - margin.left - margin.right;
+    const innerH = H - margin.top - margin.bottom;
+
+    const xMin = 0, xMax = 5;
+    const yMin = -3, yMax = 3;
+
+    function xScale(x){ return margin.left + (x - xMin) / (xMax - xMin) * innerW; }
+    function yScale(y){ return margin.top + (yMax - y) / (yMax - yMin) * innerH; }
+
+    const xCut = frailty_cutoff - 0.5;
+    const yCut = inflam_cutoff;
+
+    const regions = [
+        {x1:0,x2:xCut,y1:yMin,y2:yCut,color:"#d9f0d3",label:"Low inflammation\nLow frailty",tx:150,ty:360},
+        {x1:xCut,x2:5,y1:yMin,y2:yCut,color:"#fee8c8",label:"Low inflammation\nHigh frailty",tx:515,ty:360},
+        {x1:0,x2:xCut,y1:yCut,y2:yMax,color:"#deebf7",label:"High inflammation\nLow frailty",tx:150,ty:72},
+        {x1:xCut,x2:5,y1:yCut,y2:yMax,color:"#fcbba1",label:"High inflammation\nHigh frailty",tx:515,ty:72}
+    ];
+
+    regions.forEach(r=>{
+        const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
+        rect.setAttribute("x",xScale(r.x1));
+        rect.setAttribute("y",yScale(r.y2));
+        rect.setAttribute("width",xScale(r.x2)-xScale(r.x1));
+        rect.setAttribute("height",yScale(r.y1)-yScale(r.y2));
+        rect.setAttribute("fill",r.color);
+        rect.setAttribute("opacity","0.6");
+        svg.appendChild(rect);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg","text");
+        text.setAttribute("x",r.tx);
+        text.setAttribute("y",r.ty);
+        text.setAttribute("text-anchor","middle");
+        text.setAttribute("font-size","14");
+        r.label.split("\n").forEach((line,i)=>{
+            const tspan = document.createElementNS("http://www.w3.org/2000/svg","tspan");
+            tspan.setAttribute("x",r.tx);
+            tspan.setAttribute("dy",i===0 ? 0 : 18);
+            tspan.textContent=line;
+            text.appendChild(tspan);
+        });
+        svg.appendChild(text);
+    });
+
+    const vline = document.createElementNS("http://www.w3.org/2000/svg","line");
+    vline.setAttribute("x1",xScale(xCut));
+    vline.setAttribute("x2",xScale(xCut));
+    vline.setAttribute("y1",yScale(yMin));
+    vline.setAttribute("y2",yScale(yMax));
+    vline.setAttribute("stroke","#333");
+    vline.setAttribute("stroke-dasharray","6,6");
+    svg.appendChild(vline);
+
+    const hline = document.createElementNS("http://www.w3.org/2000/svg","line");
+    hline.setAttribute("x1",xScale(0));
+    hline.setAttribute("x2",xScale(5));
+    hline.setAttribute("y1",yScale(yCut));
+    hline.setAttribute("y2",yScale(yCut));
+    hline.setAttribute("stroke","#333");
+    hline.setAttribute("stroke-dasharray","6,6");
+    svg.appendChild(hline);
+
+    const yClamped = Math.max(yMin, Math.min(yMax, inflammationScore));
+
+    const point = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    point.setAttribute("cx",xScale(friedScore));
+    point.setAttribute("cy",yScale(yClamped));
+    point.setAttribute("r","9");
+    point.setAttribute("fill","#b30000");
+    point.setAttribute("stroke","white");
+    point.setAttribute("stroke-width","2");
+    svg.appendChild(point);
+
+    const xlabel = document.createElementNS("http://www.w3.org/2000/svg","text");
+    xlabel.setAttribute("x",W/2);
+    xlabel.setAttribute("y",H-18);
+    xlabel.setAttribute("text-anchor","middle");
+    xlabel.setAttribute("font-size","15");
+    xlabel.textContent="Fried score";
+    svg.appendChild(xlabel);
+
+    const ylabel = document.createElementNS("http://www.w3.org/2000/svg","text");
+    ylabel.setAttribute("x",22);
+    ylabel.setAttribute("y",H/2);
+    ylabel.setAttribute("text-anchor","middle");
+    ylabel.setAttribute("font-size","15");
+    ylabel.setAttribute("transform",`rotate(-90 22 ${H/2})`);
+    ylabel.textContent="Inflammatory burden score";
+    svg.appendChild(ylabel);
+}
+</script>
+
+</body>
+</html>
